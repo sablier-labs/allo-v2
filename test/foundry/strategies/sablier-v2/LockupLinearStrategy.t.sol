@@ -1,20 +1,14 @@
 pragma solidity 0.8.19;
 
-// Interfaces
 import {IStrategy} from "../../../../contracts/strategies/IStrategy.sol";
-import {ISablierV2LockupLinear} from "@sablier/v2-core/interfaces/ISablierV2LockupLinear.sol";
-import {Broker, LockupLinear} from "@sablier/v2-core/types/DataTypes.sol";
-
+import {ISablierV2LockupLinear} from "../../../../contracts/strategies/sablier-v2/external/SablierTypes.sol";
 import {LockupLinearStrategy} from "../../../../contracts/strategies/sablier-v2/LockupLinearStrategy.sol";
 
 import {LockupBase_Test} from "./LockupBase.t.sol";
-
 import {Metadata} from "../../../../contracts/core/libraries/Metadata.sol";
 
-import {console2} from "forge-std/console2.sol";
-
 contract LockupLinearStrategyTest is LockupBase_Test {
-    event RecipientDurationsChanged(address recipientId, LockupLinear.Durations durations);
+    event RecipientDurationsChanged(address recipientId, ISablierV2LockupLinear.Durations durations);
 
     ISablierV2LockupLinear internal lockupLinear = ISablierV2LockupLinear(0xB10daee1FCF62243aE27776D7a92D39dC8740f95);
     LockupLinearStrategy internal strategy;
@@ -60,7 +54,7 @@ contract LockupLinearStrategyTest is LockupBase_Test {
     function testRevert_initialize_INVALID() public {}
 
     struct Params {
-        LockupLinear.Durations durations;
+        ISablierV2LockupLinear.Durations durations;
         uint256 fundPoolAmount;
         address recipientAddress;
     }
@@ -75,6 +69,7 @@ contract LockupLinearStrategyTest is LockupBase_Test {
         uint256 streamId;
         uint256 recipientStreamId;
         uint256 afterDistributeNextStreamId;
+        ISablierV2LockupLinear.Stream stream;
         uint256 poolAmountBeforeCancel;
         uint256 allocatedGrantAmountBeforeCancel;
         uint128 refundedAmount;
@@ -149,15 +144,15 @@ contract LockupLinearStrategyTest is LockupBase_Test {
         vars.afterDistributeNextStreamId = lockupLinear.nextStreamId();
         assertEq(vars.afterDistributeNextStreamId, vars.streamId + 1, "afterDistributeNextStreamId");
 
-        LockupLinear.Stream memory stream = lockupLinear.getStream(vars.streamId);
-        assertEq(stream.sender, address(strategy), "stream.sender");
-        assertEq(stream.startTime, block.timestamp, "stream.startTime");
-        assertEq(stream.cliffTime, block.timestamp + params.durations.cliff, "stream.cliffTime");
-        assertEq(stream.endTime, block.timestamp + params.durations.total, "stream.endTime");
-        assertEq(stream.isCancelable, vars.cancelable, "stream.isCancelable");
-        assertEq(address(stream.asset), address(GTC), "stream.asset");
-        assertEq(stream.amounts.deposited, vars.grantAmount, "stream.amounts.deposited");
-        assertTrue(stream.isStream, "stream.isStream");
+        vars.stream = lockupLinear.getStream(vars.streamId);
+        assertEq(vars.stream.sender, address(strategy), "stream.sender");
+        assertEq(vars.stream.startTime, block.timestamp, "stream.startTime");
+        assertEq(vars.stream.cliffTime, block.timestamp + params.durations.cliff, "stream.cliffTime");
+        assertEq(vars.stream.endTime, block.timestamp + params.durations.total, "stream.endTime");
+        assertEq(vars.stream.isCancelable, vars.cancelable, "stream.isCancelable");
+        assertEq(address(vars.stream.asset), address(GTC), "stream.asset");
+        assertEq(vars.stream.amounts.deposited, vars.grantAmount, "stream.amounts.deposited");
+        assertTrue(vars.stream.isStream, "stream.isStream");
 
         vm.warp(lockupLinear.getEndTime(vars.streamId) / 2);
 
@@ -186,7 +181,8 @@ contract LockupLinearStrategyTest is LockupBase_Test {
     function test_registerRecipient() public {
         Vars memory vars;
 
-        LockupLinear.Durations memory durations = LockupLinear.Durations({cliff: 3 days, total: 4 days});
+        ISablierV2LockupLinear.Durations memory durations =
+            ISablierV2LockupLinear.Durations({cliff: 3 days, total: 4 days});
 
         vars.cancelable = true;
         vars.registerRecipientData = abi.encode(
@@ -205,7 +201,8 @@ contract LockupLinearStrategyTest is LockupBase_Test {
     function testRevert_registerRecipient_UNAUTHORIZED_NOT_PROFILE_MEMBER() public {
         Vars memory vars;
 
-        LockupLinear.Durations memory durations = LockupLinear.Durations({cliff: 3 days, total: 4 days});
+        ISablierV2LockupLinear.Durations memory durations =
+            ISablierV2LockupLinear.Durations({cliff: 3 days, total: 4 days});
 
         vars.cancelable = true;
         vars.registerRecipientData = abi.encode(
@@ -224,7 +221,8 @@ contract LockupLinearStrategyTest is LockupBase_Test {
     function testRevert_registerRecipient_INVALID_REGISTRATION() public {
         Vars memory vars;
 
-        LockupLinear.Durations memory durations = LockupLinear.Durations({cliff: 3 days, total: 4 days});
+        ISablierV2LockupLinear.Durations memory durations =
+            ISablierV2LockupLinear.Durations({cliff: 3 days, total: 4 days});
 
         vars.cancelable = true;
         vars.registerRecipientData =
@@ -240,7 +238,8 @@ contract LockupLinearStrategyTest is LockupBase_Test {
     function testRevert_registerRecipient_RECIPIENT_ALREADY_ACCEPTED() public {
         Vars memory vars;
 
-        LockupLinear.Durations memory durations = LockupLinear.Durations({cliff: 3 days, total: 4 days});
+        ISablierV2LockupLinear.Durations memory durations =
+            ISablierV2LockupLinear.Durations({cliff: 3 days, total: 4 days});
 
         vars.cancelable = true;
         vars.registerRecipientData = abi.encode(
@@ -262,7 +261,8 @@ contract LockupLinearStrategyTest is LockupBase_Test {
     function testRevert_registerRecipient_INVALID_METADATA() public {
         Vars memory vars;
 
-        LockupLinear.Durations memory durations = LockupLinear.Durations({cliff: 3 days, total: 4 days});
+        ISablierV2LockupLinear.Durations memory durations =
+            ISablierV2LockupLinear.Durations({cliff: 3 days, total: 4 days});
 
         vars.cancelable = true;
         vars.registerRecipientData = abi.encode(
@@ -284,7 +284,8 @@ contract LockupLinearStrategyTest is LockupBase_Test {
         address recipientAddress = makeAddr("recipientAddress");
         bool cancelable = true;
         uint256 grantAmount = 1000e18;
-        LockupLinear.Durations memory registerDurations = LockupLinear.Durations({cliff: 3 days, total: 4 days});
+        ISablierV2LockupLinear.Durations memory registerDurations =
+            ISablierV2LockupLinear.Durations({cliff: 3 days, total: 4 days});
 
         bytes memory registerRecipientData = abi.encode(
             recipientAddress, useRegistryAnchor, cancelable, grantAmount, registerDurations, strategyMetadata
@@ -297,7 +298,8 @@ contract LockupLinearStrategyTest is LockupBase_Test {
         assertEq(recipient.durations.cliff, registerDurations.cliff, "recipient.durations.cliff");
         assertEq(recipient.durations.total, registerDurations.total, "recipient.durations.total");
 
-        LockupLinear.Durations memory newDurations = LockupLinear.Durations({cliff: 6 days, total: 12 days});
+        ISablierV2LockupLinear.Durations memory newDurations =
+            ISablierV2LockupLinear.Durations({cliff: 6 days, total: 12 days});
         vm.expectEmit({emitter: address(strategy)});
         emit RecipientDurationsChanged(recipientIds[0], newDurations);
         strategy.changeRecipientDurations(recipientIds[0], newDurations);
@@ -340,7 +342,8 @@ contract LockupLinearStrategyTest is LockupBase_Test {
         assertEq(uint8(strategy.getRecipientStatus(recipient())), 0);
 
         // Register a new recipient
-        LockupLinear.Durations memory durations = LockupLinear.Durations({cliff: 3 days, total: 4 days});
+        ISablierV2LockupLinear.Durations memory durations =
+            ISablierV2LockupLinear.Durations({cliff: 3 days, total: 4 days});
 
         vars.cancelable = true;
         vars.grantAmount = 1e19;

@@ -1,15 +1,12 @@
 pragma solidity 0.8.19;
 
-import {ISablierV2LockupDynamic} from "@sablier/v2-core/interfaces/ISablierV2LockupDynamic.sol";
-import {Broker, LockupDynamic} from "@sablier/v2-core/types/DataTypes.sol";
-import {UD2x18} from "@sablier/v2-core/types/Math.sol";
-
+import {ISablierV2LockupDynamic} from "../../../../contracts/strategies/sablier-v2/external/SablierTypes.sol";
 import {LockupDynamicStrategy} from "../../../../contracts/strategies/sablier-v2/LockupDynamicStrategy.sol";
 
-import {LockupBase_Test} from "./LockupBase.t.sol";
+import {LockupBase_Test, ISablierV2Lockup} from "./LockupBase.t.sol";
 
 contract LockupDynamicStrategyTest is LockupBase_Test {
-    event RecipientSegmentsChanged(address recipientId, LockupDynamic.SegmentWithDelta[] segments);
+    event RecipientSegmentsChanged(address recipientId, ISablierV2LockupDynamic.SegmentWithDelta[] segments);
 
     ISablierV2LockupDynamic internal lockupDynamic = ISablierV2LockupDynamic(0x39EFdC3dbB57B2388CcC4bb40aC4CB1226Bc9E44);
     LockupDynamicStrategy internal strategy;
@@ -32,7 +29,7 @@ contract LockupDynamicStrategyTest is LockupBase_Test {
     }
 
     struct Params {
-        UD2x18 segmentExponent;
+        uint64 segmentExponent;
         uint128 fundPoolAmount;
         address recipientAddress;
     }
@@ -40,18 +37,18 @@ contract LockupDynamicStrategyTest is LockupBase_Test {
     /// Needed to prevent "Stack too deep" error
     struct Vars {
         uint128 segmentAmount;
-        LockupDynamic.SegmentWithDelta[] segments;
+        ISablierV2LockupDynamic.SegmentWithDelta[] segments;
         uint128 grantAmount;
         bool cancelable;
         bytes registerRecipientData;
         address[] recipientIds;
         LockupDynamicStrategy.Recipient recipient;
         bytes allocateData;
-        LockupDynamic.Segment[] expectedSegments;
+        ISablierV2LockupDynamic.Segment[] expectedSegments;
         uint256 streamId;
         uint256 recipientStreamId;
         uint256 afterDistributeNextStreamId;
-        LockupDynamic.Stream stream;
+        ISablierV2LockupDynamic.Stream stream;
         uint256 poolAmountBeforeCancel;
         uint256 allocatedGrantAmountBeforeCancel;
         uint256 refundedAmount;
@@ -75,7 +72,7 @@ contract LockupDynamicStrategyTest is LockupBase_Test {
         uint256 feeAmount = (params.fundPoolAmount * allo().getFeePercentage()) / allo().FEE_DENOMINATOR();
         vars.grantAmount = params.fundPoolAmount - uint128(feeAmount);
 
-        vars.segments = new LockupDynamic.SegmentWithDelta[](2);
+        vars.segments = new ISablierV2LockupDynamic.SegmentWithDelta[](2);
         vars.segments[0].delta = 1 days;
         vars.segments[1].delta = 12 weeks;
         vars.segments[0].amount = vars.grantAmount / 2;
@@ -136,7 +133,7 @@ contract LockupDynamicStrategyTest is LockupBase_Test {
         vars.afterDistributeNextStreamId = lockupDynamic.nextStreamId();
         assertEq(vars.afterDistributeNextStreamId, vars.streamId + 1, "afterDistributeNextStreamId");
 
-        vars.expectedSegments = new LockupDynamic.Segment[](2);
+        vars.expectedSegments = new ISablierV2LockupDynamic.Segment[](2);
         vars.expectedSegments[0].milestone = uint40(block.timestamp) + vars.segments[0].delta;
         vars.expectedSegments[1].milestone = vars.expectedSegments[0].milestone + vars.segments[1].delta;
         vars.expectedSegments[0].amount = vars.segments[0].amount;
@@ -180,13 +177,14 @@ contract LockupDynamicStrategyTest is LockupBase_Test {
         address recipientAddress = makeAddr("recipientAddress");
         bool cancelable = true;
         uint256 grantAmount = 1000e18;
-        LockupDynamic.SegmentWithDelta[] memory registerSegments = new LockupDynamic.SegmentWithDelta[](2);
+        ISablierV2LockupDynamic.SegmentWithDelta[] memory registerSegments =
+            new ISablierV2LockupDynamic.SegmentWithDelta[](2);
         registerSegments[0].delta = 3 days;
         registerSegments[1].delta = 4 days;
         registerSegments[0].amount = 300e18;
         registerSegments[1].amount = 700e18;
-        registerSegments[0].exponent = UD2x18.wrap(3.14e18);
-        registerSegments[1].exponent = UD2x18.wrap(2.71e18);
+        registerSegments[0].exponent = uint64(3.14e18);
+        registerSegments[1].exponent = uint64(2.71e18);
 
         bytes memory registerRecipientData =
             abi.encode(recipientAddress, useRegistryAnchor, cancelable, grantAmount, registerSegments, strategyMetadata);
@@ -197,13 +195,14 @@ contract LockupDynamicStrategyTest is LockupBase_Test {
         LockupDynamicStrategy.Recipient memory recipient = strategy.getRecipient(recipientIds[0]);
         assertEq(recipient.segments, registerSegments, "recipient.segments");
 
-        LockupDynamic.SegmentWithDelta[] memory newSegments = new LockupDynamic.SegmentWithDelta[](2);
+        ISablierV2LockupDynamic.SegmentWithDelta[] memory newSegments =
+            new ISablierV2LockupDynamic.SegmentWithDelta[](2);
         newSegments[0].delta = 6 days;
         newSegments[1].delta = 12 days;
         newSegments[0].amount = 400e18;
         newSegments[1].amount = 600e18;
-        newSegments[0].exponent = UD2x18.wrap(3.14e18);
-        newSegments[1].exponent = UD2x18.wrap(2.71e18);
+        newSegments[0].exponent = uint64(3.14e18);
+        newSegments[1].exponent = uint64(2.71e18);
 
         vm.expectEmit({emitter: address(strategy)});
         emit RecipientSegmentsChanged(recipientIds[0], newSegments);
@@ -222,15 +221,17 @@ contract LockupDynamicStrategyTest is LockupBase_Test {
     /// ========== Helpers ============
     /// ===============================
 
-    function assertEq(LockupDynamic.Segment[] memory a, LockupDynamic.Segment[] memory b, string memory message)
-        internal
-    {
+    function assertEq(
+        ISablierV2LockupDynamic.Segment[] memory a,
+        ISablierV2LockupDynamic.Segment[] memory b,
+        string memory message
+    ) internal {
         assertEq(keccak256(abi.encode(a)), keccak256(abi.encode(b)), message);
     }
 
     function assertEq(
-        LockupDynamic.SegmentWithDelta[] memory a,
-        LockupDynamic.SegmentWithDelta[] memory b,
+        ISablierV2LockupDynamic.SegmentWithDelta[] memory a,
+        ISablierV2LockupDynamic.SegmentWithDelta[] memory b,
         string memory message
     ) internal {
         assertEq(keccak256(abi.encode(a)), keccak256(abi.encode(b)), message);

@@ -4,9 +4,7 @@ pragma solidity 0.8.19;
 import {ReentrancyGuard} from "@openzeppelin/contracts/security/ReentrancyGuard.sol";
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import {SafeERC20} from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
-import {ISablierV2LockupDynamic} from "@sablier/v2-core/interfaces/ISablierV2LockupDynamic.sol";
-import {Broker, LockupDynamic} from "@sablier/v2-core/types/DataTypes.sol";
-import {IERC20 as SablierIERC20} from "@sablier/v2-core/types/Tokens.sol";
+import {ISablierV2LockupDynamic} from "./external/SablierTypes.sol";
 
 import {IAllo} from "../../core/IAllo.sol";
 import {IRegistry} from "../../core/IRegistry.sol";
@@ -32,9 +30,9 @@ contract LockupDynamicStrategy is BaseStrategy, ReentrancyGuard {
     /// ========== Events =============
     /// ===============================
 
-    event BrokerSet(Broker broker);
+    event BrokerSet(ISablierV2LockupDynamic.Broker broker);
     event RecipientStatusChanged(address recipientId, InternalRecipientStatus status);
-    event RecipientSegmentsChanged(address recipientId, LockupDynamic.SegmentWithDelta[] segments);
+    event RecipientSegmentsChanged(address recipientId, ISablierV2LockupDynamic.SegmentWithDelta[] segments);
 
     /// ================================
     /// ========== Storage =============
@@ -60,7 +58,7 @@ contract LockupDynamicStrategy is BaseStrategy, ReentrancyGuard {
 
     // slot 2 and 3
     /// @notice See https://docs.sablier.com/concepts/protocol/fees#broker-fees
-    Broker public broker;
+    ISablierV2LockupDynamic.Broker public broker;
 
     // slots [3..n]
     mapping(address recipientId => Recipient recipient) private _recipients;
@@ -78,7 +76,7 @@ contract LockupDynamicStrategy is BaseStrategy, ReentrancyGuard {
         // slots [2..m]
         Metadata metadata;
         // slots [m..n]
-        LockupDynamic.SegmentWithDelta[] segments;
+        ISablierV2LockupDynamic.SegmentWithDelta[] segments;
     }
 
     /// ===============================
@@ -125,7 +123,7 @@ contract LockupDynamicStrategy is BaseStrategy, ReentrancyGuard {
     }
 
     /// @notice Get the broker
-    function getBroker() external view returns (Broker memory) {
+    function getBroker() external view returns (ISablierV2LockupDynamic.Broker memory) {
         return broker;
     }
 
@@ -202,10 +200,10 @@ contract LockupDynamicStrategy is BaseStrategy, ReentrancyGuard {
     /// @notice Change the recipient's segments
     /// @param _recipientId Id of the recipient
     /// @param _segments The new segments
-    function changeRecipientSegments(address _recipientId, LockupDynamic.SegmentWithDelta[] calldata _segments)
-        external
-        onlyPoolManager(msg.sender)
-    {
+    function changeRecipientSegments(
+        address _recipientId,
+        ISablierV2LockupDynamic.SegmentWithDelta[] calldata _segments
+    ) external onlyPoolManager(msg.sender) {
         if (
             _recipients[_recipientId].recipientStatus != InternalRecipientStatus.Pending
                 && _recipients[_recipientId].recipientStatus != InternalRecipientStatus.InReview
@@ -226,7 +224,7 @@ contract LockupDynamicStrategy is BaseStrategy, ReentrancyGuard {
 
     /// @notice Set the Sablier broker
     /// @param _broker The new Sablier broker to be set
-    function setBroker(Broker memory _broker) external onlyPoolManager(msg.sender) {
+    function setBroker(ISablierV2LockupDynamic.Broker memory _broker) external onlyPoolManager(msg.sender) {
         broker = _broker;
         emit BrokerSet(broker);
     }
@@ -277,20 +275,21 @@ contract LockupDynamicStrategy is BaseStrategy, ReentrancyGuard {
         uint256 grantAmount;
         Metadata memory metadata;
         address recipientAddress;
-        LockupDynamic.SegmentWithDelta[] memory segments;
+        ISablierV2LockupDynamic.SegmentWithDelta[] memory segments;
         bool useRegistryAnchor;
 
         // decode data custom to this strategy
         if (registryGating) {
-            (recipientId, recipientAddress, cancelable, grantAmount, segments, metadata) =
-                abi.decode(_data, (address, address, bool, uint256, LockupDynamic.SegmentWithDelta[], Metadata));
+            (recipientId, recipientAddress, cancelable, grantAmount, segments, metadata) = abi.decode(
+                _data, (address, address, bool, uint256, ISablierV2LockupDynamic.SegmentWithDelta[], Metadata)
+            );
 
             if (!_isProfileMember(recipientId, _sender)) {
                 revert UNAUTHORIZED();
             }
         } else {
             (recipientAddress, useRegistryAnchor, cancelable, grantAmount, segments, metadata) =
-                abi.decode(_data, (address, bool, bool, uint256, LockupDynamic.SegmentWithDelta[], Metadata));
+                abi.decode(_data, (address, bool, bool, uint256, ISablierV2LockupDynamic.SegmentWithDelta[], Metadata));
             recipientId = _sender;
             if (useRegistryAnchor && !_isProfileMember(recipientId, _sender)) {
                 revert UNAUTHORIZED();
@@ -389,8 +388,8 @@ contract LockupDynamicStrategy is BaseStrategy, ReentrancyGuard {
 
         uint128 amount = uint128(recipient.grantAmount);
 
-        LockupDynamic.CreateWithDeltas memory params = LockupDynamic.CreateWithDeltas({
-            asset: SablierIERC20(pool.token),
+        ISablierV2LockupDynamic.CreateWithDeltas memory params = ISablierV2LockupDynamic.CreateWithDeltas({
+            asset: IERC20(pool.token),
             broker: broker,
             cancelable: recipient.cancelable,
             recipient: recipient.recipientAddress,
