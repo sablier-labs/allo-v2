@@ -38,6 +38,7 @@
     "@openzeppelin/contracts-upgradeable": "^4.9.2",
     "@openzeppelin/hardhat-upgrades": "^2.0.1",
     "@openzeppelin/upgrades-core": "^1.27.1",
+    "@sablier/v2-core": "^1.0.2",
     "@typechain/ethers-v6": "^0.4.0",
     "@typechain/hardhat": "^8.0.3",
     "@types/chai": "^4.3.5",

@@ -1,17 +1,14 @@
 pragma solidity 0.8.19;
 
 // Interfaces
-import {IStrategy} from "../../../../contracts/strategies/IStrategy.sol";
-import {ISablierV2LockupLinear} from "@sablier/v2-core/interfaces/ISablierV2LockupLinear.sol";
-import {Broker, LockupLinear} from "@sablier/v2-core/types/DataTypes.sol";
+import {ISablierV2LockupLinear} from "@sablier/v2-core/src/interfaces/ISablierV2LockupLinear.sol";
+import {Broker, LockupLinear} from "@sablier/v2-core/src/types/DataTypes.sol";
 
+import {IStrategy} from "../../../../contracts/strategies/IStrategy.sol";
+import {Metadata} from "../../../../contracts/core/libraries/Metadata.sol";
 import {LockupLinearStrategy} from "../../../../contracts/strategies/sablier-v2/LockupLinearStrategy.sol";
 
 import {LockupBase_Test} from "./LockupBase.t.sol";
-
-import {Metadata} from "../../../../contracts/core/libraries/Metadata.sol";
-
-import {console2} from "forge-std/console2.sol";
 
 contract LockupLinearStrategyTest is LockupBase_Test {
     event RecipientDurationsChanged(address recipientId, LockupLinear.Durations durations);

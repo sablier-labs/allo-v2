@@ -1179,6 +1179,11 @@
   resolved "https://registry.yarnpkg.com/@openzeppelin/contracts-upgradeable/-/contracts-upgradeable-4.9.3.tgz#ff17a80fb945f5102571f8efecb5ce5915cc4811"
   integrity sha512-jjaHAVRMrE4UuZNfDwjlLGDxTHWIOwTJS2ldnc278a0gevfXfPr8hxKEVBGFBE96kl2G3VHDZhUimw/+G3TG2A==
 
+"@openzeppelin/contracts@4.9.2":
+  version "4.9.2"
+  resolved "https://registry.yarnpkg.com/@openzeppelin/contracts/-/contracts-4.9.2.tgz#1cb2d5e4d3360141a17dbc45094a8cad6aac16c1"
+  integrity sha512-mO+y6JaqXjWeMh9glYVzVu8HYPGknAAnWyxTRhGeckOruyXQMNnlcW6w/Dx9ftLeIQk6N+ZJFuVmTwF7lEIFrg==
+
 "@openzeppelin/contracts@^4.9.1":
   version "4.9.3"
   resolved "https://registry.yarnpkg.com/@openzeppelin/contracts/-/contracts-4.9.3.tgz#00d7a8cf35a475b160b3f0293a6403c511099364"
@@ -1233,6 +1238,11 @@
     proper-lockfile "^4.1.1"
     solidity-ast "^0.4.15"
 
+"@prb/math@4.0.1":
+  version "4.0.1"
+  resolved "https://registry.yarnpkg.com/@prb/math/-/math-4.0.1.tgz#bc90277f4f1c085c973f502455bf12c2b3b67666"
+  integrity sha512-ANTz2KMV+dMdZ57mWgDTR6jZo5uQzUczQEHCxd7CvJZZ9yafnfPhUUILHvvigIOZ85fZbTPVkC8YoRG1z5Qf7g==
+
 "@resolver-engine/core@^0.3.3":
   version "0.3.3"
   resolved "https://registry.yarnpkg.com/@resolver-engine/core/-/core-0.3.3.tgz#590f77d85d45bc7ecc4e06c654f41345db6ca967"
@@ -1269,6 +1279,14 @@
     hosted-git-info "^2.6.0"
     path-browserify "^1.0.0"
     url "^0.11.0"
+
+"@sablier/v2-core@^1.0.2":
+  version "1.0.2"
+  resolved "https://registry.yarnpkg.com/@sablier/v2-core/-/v2-core-1.0.2.tgz#75bb53604554a817cb5ba8f25b78314cec06dcb3"
+  integrity sha512-BjobBTRLuh38fQsHtFGVsQI1XN9JXatldxbS+aFxlhYaU77fQimCejYrBqP7W1wQZnBAvdXRdKNPUskdUpM5nw==
+  dependencies:
+    "@openzeppelin/contracts" "4.9.2"
+    "@prb/math" "4.0.1"
 
 "@scure/base@~1.1.0":
   version "1.1.1"
