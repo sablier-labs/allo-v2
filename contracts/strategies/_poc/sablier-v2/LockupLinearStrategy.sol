@@ -6,7 +6,6 @@ import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import {SafeERC20} from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import {ISablierV2LockupLinear} from "@sablier/v2-core/src/interfaces/ISablierV2LockupLinear.sol";
 import {Broker, LockupLinear} from "@sablier/v2-core/src/types/DataTypes.sol";
-import {IERC20 as SablierIERC20} from "@sablier/v2-core/src/types/Tokens.sol";
 
 import {IAllo} from "../../../core/interfaces/IAllo.sol";
 import {IRegistry} from "../../../core/interfaces/IRegistry.sol";
@@ -366,7 +365,7 @@ contract LockupLinearStrategy is BaseStrategy, ReentrancyGuard {
         uint128 amount = uint128(recipient.grantAmount);
 
         LockupLinear.CreateWithDurations memory params = LockupLinear.CreateWithDurations({
-            asset: SablierIERC20(pool.token),
+            asset: IERC20(pool.token),
             broker: broker,
             cancelable: recipient.cancelable,
             durations: recipient.durations,

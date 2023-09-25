@@ -6,7 +6,6 @@ import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import {SafeERC20} from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import {ISablierV2LockupDynamic} from "@sablier/v2-core/src/interfaces/ISablierV2LockupDynamic.sol";
 import {Broker, LockupDynamic} from "@sablier/v2-core/src/types/DataTypes.sol";
-import {IERC20 as SablierIERC20} from "@sablier/v2-core/src/types/Tokens.sol";
 
 import {IAllo} from "../../../core/interfaces/IAllo.sol";
 import {IRegistry} from "../../../core/interfaces/IRegistry.sol";
@@ -377,7 +376,7 @@ contract LockupDynamicStrategy is BaseStrategy, ReentrancyGuard {
         uint128 amount = uint128(recipient.grantAmount);
 
         LockupDynamic.CreateWithDeltas memory params = LockupDynamic.CreateWithDeltas({
-            asset: SablierIERC20(pool.token),
+            asset: IERC20(pool.token),
             broker: broker,
             cancelable: recipient.cancelable,
             recipient: recipient.recipientAddress,
